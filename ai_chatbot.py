@@ -3,7 +3,8 @@ from api import client
 
 
 def chat_with_claude(
-    max_history=10, max_tokens=500, model="claude-3-haiku-20240307", system_prompt=None
+    max_history=10, max_tokens=500, model="claude-3-haiku-20240307", system_prompt=None, 
+    stream=True,
 ):
     """
     Run an interactive chat with Claude.
@@ -40,6 +41,7 @@ def chat_with_claude(
                 "model": model,
                 "messages": conversation_history,
                 "max_tokens": max_tokens,
+                'stream': stream,
             }
 
             # Add system prompt if provided
@@ -67,12 +69,12 @@ def chat_with_claude(
 # Example usage
 if __name__ == "__main__":
     # Basic usage with default parameters
-    chat_with_claude()
+    #chat_with_claude()
 
-    # Advanced usage with customized parameters
-    # chat_with_claude(
-    #     max_history=6,
-    #     max_tokens=300,
-    #     model="claude-3-haiku-20240307",
-    #     system_prompt="Please provide concise responses to save on tokens."
-    # )
+    #Advanced usage with customized parameters
+    chat_with_claude(
+        max_history=6,
+        max_tokens=300,
+        model="claude-3-haiku-20240307",
+        system_prompt="Please provide response as Kwame Nkrumah."
+    )
