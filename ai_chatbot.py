@@ -3,7 +3,10 @@ from api import client
 
 
 def chat_with_claude(
-    max_history=10, max_tokens=500, model="claude-3-haiku-20240307", system_prompt=None, 
+    max_history=10,
+    max_tokens=500,
+    model="claude-3-haiku-20240307",
+    system_prompt=None,
     stream=True,
 ):
     """
@@ -14,6 +17,7 @@ def chat_with_claude(
         max_tokens (int): Maximum tokens in Claude's response
         model (str): Claude model to use
         system_prompt (str): Optional system prompt
+        stream (bool): Whether to stream the response
     """
     conversation_history = []
 
@@ -41,7 +45,6 @@ def chat_with_claude(
                 "model": model,
                 "messages": conversation_history,
                 "max_tokens": max_tokens,
-                'stream': stream,
             }
 
             # Add system prompt if provided
@@ -49,10 +52,29 @@ def chat_with_claude(
                 request_params["system"] = system_prompt
 
             # Make the API call
-            response = client.messages.create(**request_params)
+            if stream:
+                # Handle streaming response
+                print("Assistant: ", end="", flush=True)
+                full_response = ""
 
-            assistant_response = response.content[0].text
-            print(f"Assistant: {assistant_response}")
+                # For streaming, we don't pass the stream parameter to the stream() method
+                with client.messages.stream(**request_params) as stream_response:
+                    for chunk in stream_response:
+                        if chunk.type == "content_block_delta":
+                            if chunk.delta.text:
+                                print(chunk.delta.text, end="", flush=True)
+                                full_response += chunk.delta.text
+
+                print()  # Add newline after streaming completes
+                assistant_response = full_response
+            else:
+                # For non-streaming, we need to set stream=False
+                request_params["stream"] = False
+                response = client.messages.create(**request_params)
+                assistant_response = response.content[0].text
+                print(f"Assistant: {assistant_response}")
+
+            # Add assistant response to history
             conversation_history.append(
                 {"role": "assistant", "content": assistant_response}
             )
@@ -69,12 +91,12 @@ def chat_with_claude(
 # Example usage
 if __name__ == "__main__":
     # Basic usage with default parameters
-    #chat_with_claude()
+    # chat_with_claude()
 
-    #Advanced usage with customized parameters
+    # Advanced usage with customized parameters
     chat_with_claude(
         max_history=6,
         max_tokens=300,
         model="claude-3-haiku-20240307",
-        system_prompt="Please provide response as Kwame Nkrumah."
+        # system_prompt="Please provide response as Kwame Nkrumah."
     )
